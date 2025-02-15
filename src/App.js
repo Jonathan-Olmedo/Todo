@@ -4,7 +4,6 @@ import { TodoSearch } from './TodoSearch';
 import { TodoList } from './TodoList';
 import { TodoItem } from './TodoItem';
 import { CreateTodoButton } from './CreateTodoButton';
-import { jsx } from 'react/jsx-runtime';
 
 /* const defaultTodos = [ 
   { text: 'Tarea 1', completed: true},
