@@ -4,8 +4,9 @@ import { TodoSearch } from './TodoSearch';
 import { TodoList } from './TodoList';
 import { TodoItem } from './TodoItem';
 import { CreateTodoButton } from './CreateTodoButton';
+import { jsx } from 'react/jsx-runtime';
 
-const defaultTodos = [ 
+/* const defaultTodos = [ 
   { text: 'Tarea 1', completed: true},
   { text: 'Tarea 2', completed: true},
   { text: 'Tarea 3', completed: false},
@@ -13,11 +14,34 @@ const defaultTodos = [
   { text: 'cebolla', completed: false},
 ]
 
-function App() {
-  const [todos, setTodos] = React.useState(defaultTodos)
-  const [searchValue, setSearchValue] = React.useState('');
+localStorage.setItem('TODOS_V1', JSON.stringify(defaultTodos)) */
+
+function useLocalStorage (itemName, initialValue) {
   
-  const completedTodos = todos.filter(todo => 
+  let localStorageItem = localStorage.getItem(itemName)
+  let parsedItem;
+  if (!localStorageItem) {
+    localStorage.setItem(itemName, JSON.stringify(initialValue))
+    parsedItem = initialValue
+  } else {
+    parsedItem = JSON.parse(localStorageItem)
+  }
+  const [item, setItem] = React.useState(parsedItem)
+
+  const saveItem = (newItem) => {
+    localStorage.setItem(itemName, JSON.stringify(newItem))
+    setItem(newItem)
+  }
+
+  return [item, saveItem]
+}
+
+function App() {
+  
+  const [todos, saveTodos] = useLocalStorage('TODOS_V1', [])
+  const [searchValue, setSearchValue] = React.useState('');
+
+  const completedTodos = todos.filter(todo =>
     todo.completed
   ).length
   const totalTodos = todos.length
@@ -28,17 +52,24 @@ function App() {
     return todoText.includes(searchText)
   })
 
-  function deleteTodo (text){
+  function completedTodo(text) {
+    const completeTodo = [...todos]
+    const indexComplete = completeTodo.findIndex((todo) => todo.text == text)
+    completeTodo[indexComplete].completed ^= true
+    saveTodos(completeTodo)
+  }
+
+  function deleteTodo(text) {
     const deleteTodoArray = [...todos]
     const indexDelete = deleteTodoArray.findIndex((todo) => todo.text === text)
-    deleteTodoArray.splice(indexDelete,1)
-    setTodos(deleteTodoArray)
+    deleteTodoArray.splice(indexDelete, 1)
+    saveTodos(deleteTodoArray)
   }
 
   return (
     <>
-      
-      <TodoCounter total={totalTodos} completed={completedTodos}/>
+
+      <TodoCounter total={totalTodos} completed={completedTodos} />
       <TodoSearch
         searchValue={searchValue}
         setSearchValue={setSearchValue}
@@ -46,19 +77,18 @@ function App() {
 
       <TodoList>
         {searchedTodos.map(todo => {
-           /* otra manera de pasar eventos es con las props */
-          return (<TodoItem 
-            todos={todos} 
-            setTodos={setTodos} 
-            key={todo.text} 
-            text={todo.text} 
+          /* otra manera de pasar eventos es con las props */
+          return (<TodoItem
+            key={todo.text}
+            text={todo.text}
             completed={todo.completed}
-            onDelete={() => {deleteTodo(todo.text)}}
-            />)
+            onComplete={() => { completedTodo(todo.text) }}
+            onDelete={() => { deleteTodo(todo.text) }}
+          />)
         })}
       </TodoList>
 
-      <CreateTodoButton/>
+      <CreateTodoButton />
 
     </>
   );
